@@ -65,21 +65,40 @@ HWND GetProcessWindow()
 	return window;
 }
 
-DWORD WINAPI MainThread(LPVOID lpReserved)
+DWORD WINAPI MainThread(LPVOID lpThreadParameter)
 {
 	bool attached = false;
 	do
 	{
 		if (kiero::init(kiero::RenderType::D3D9) == kiero::Status::Success)
 		{
-			kiero::bind(42, (void**)& oEndScene, hkEndScene);
+			kiero::bind(42, reinterpret_cast<void**>(&oEndScene), hkEndScene);
 			do
 				window = GetProcessWindow();
 			while (window == NULL);
-			oWndProc = (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)WndProc);
+			oWndProc = (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc));
 			attached = true;
 		}
 	} while (!attached);
+
+	do
+	{
+		// 
+		Sleep(50);
+	} while (!GetAsyncKeyState(VK_F12));
+
+	SetWindowLongPtr(window, GWL_WNDPROC, reinterpret_cast<LONG_PTR>(oWndProc));
+
+	ImGui_ImplDX9_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
+	kiero::shutdown();
+
+	Sleep(200);
+
+	FreeLibraryAndExitThread(reinterpret_cast<HMODULE>(lpThreadParameter), 0);
+
 	return TRUE;
 }
 
@@ -92,7 +111,7 @@ BOOL WINAPI DllMain(HMODULE hMod, DWORD dwReason, LPVOID lpReserved)
 		CreateThread(nullptr, 0, MainThread, hMod, 0, nullptr);
 		break;
 	case DLL_PROCESS_DETACH:
-		kiero::shutdown();
+		
 		break;
 	}
 	return TRUE;
