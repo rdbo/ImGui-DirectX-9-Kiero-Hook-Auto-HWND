@@ -76,7 +76,7 @@ DWORD WINAPI MainThread(LPVOID lpReserved)
 			do
 				window = GetProcessWindow();
 			while (window == NULL);
-			oWndProc = (WNDPROC)SetWindowLongPtr(window, GWL_WNDPROC, (LONG_PTR)WndProc);
+			oWndProc = (WNDPROC)SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)WndProc);
 			attached = true;
 		}
 	} while (!attached);
